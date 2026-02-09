@@ -29,8 +29,8 @@ ENV/
 # MLflow
 mlruns/
 
-# Data files
-data/
+# Generated data files (not source code)
+/data/
 *.pt
 *.pth
 *.hdf5
