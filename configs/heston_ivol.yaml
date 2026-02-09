@@ -1,0 +1,25 @@
+version: "1.0"
+name: heston_ivol_deeponet
+model: heston
+mlflow_tracking_uri: null   # defaults to sqlite:///<output_dir>/mlflow.db
+mlflow_experiment_name: null # defaults to experiment name
+
+network:
+  branch_layers: [5, 256, 256, 256, 256]  
+  trunk_layers: [3, 256, 256, 256, 256]   
+  activation: tanh
+  initializer: Glorot uniform
+
+training:
+  iterations: 50000
+  lr: 0.0005  
+  display_every: 1000
+  use_lbfgs: true  
+  seed: 42
+
+data:
+  source: data/heston_ivol.pt
+
+output:
+  output_dir: outputs/heston_ivol
+  model_name: heston_ivol_deeponet

@@ -1,0 +1,62 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+
+# MLflow
+mlruns/
+
+# Data files
+data/
+*.pt
+*.pth
+*.hdf5
+*.h5
+
+# Outputs
+outputs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Logs
+*.log
+
+# rBergomi files (not to be pushed)
+src/deeponet_pricing/data/rbergomi.py
+src/deeponet_pricing/models/rbergomi.py
+src/deeponet_pricing/evaluation/rbergomi.py
+src/deeponet_pricing/utils/rbergomi/
+configs/rbergomi_curve.yaml
