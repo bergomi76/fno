@@ -60,12 +60,18 @@ def generate_heston_ivol_data(
     x_range: tuple[float, float] = (-0.4, 0.4),
     v_range: tuple[float, float] = (0.02, 0.20),
     tau_range: tuple[float, float] = (0.05, 1.0),
+    log_tau: bool = True,
+    adaptive_cos_n: bool = True,
     seed: int = 42,
     verbose: bool = True,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Generate Heston IV data via COS pricing + BS inversion.
 
     Uses Latin Hypercube Sampling for better parameter space coverage.
+
+    Args:
+        log_tau: If True, use log-spaced τ grid (denser at short maturities)
+        adaptive_cos_n: If True, increase COS N for short maturities
 
     Returns:
         (branch, trunk, targets) where:
@@ -91,10 +97,18 @@ def generate_heston_ivol_data(
     if verbose:
         logger.info(f"Latin Hypercube Sampling: {n_samples} samples in 5D parameter space")
 
-    # Trunk grid
+    # Trunk grid - use log-spacing for τ to concentrate points at short maturities
     x_vals = np.linspace(*x_range, n_x)
     v_vals = np.linspace(*v_range, n_v)
-    tau_vals = np.linspace(*tau_range, n_tau)
+    
+    if log_tau:
+        # Log-spaced: 10x more density at short maturities where COS struggles
+        tau_vals = np.logspace(np.log10(tau_range[0]), np.log10(tau_range[1]), n_tau)
+        if verbose:
+            logger.info(f"Using log-spaced τ grid: {tau_vals[0]:.3f} to {tau_vals[-1]:.3f}")
+    else:
+        tau_vals = np.linspace(*tau_range, n_tau)
+    
     xg, vg, tg = np.meshgrid(x_vals, v_vals, tau_vals, indexing="ij")
     trunk = np.column_stack([xg.ravel(), vg.ravel(), tg.ravel()]).astype(np.float32)
     n_grid = trunk.shape[0]
@@ -121,7 +135,14 @@ def generate_heston_ivol_data(
         if feller_lhs < feller_rhs:
             feller_warnings += 1
         
-        prices = cos_price_heston(S, v, tau, r_i, kappa_i, theta_i, sv_i, rho_i, K=K)
+        # Adaptive COS N: use higher N for short maturities to avoid Gibbs oscillations
+        # For τ < 0.1, use N=512; otherwise N=128
+        if adaptive_cos_n:
+            N_cos = 512 if (tau < 0.1).any() else 128
+        else:
+            N_cos = 128
+        
+        prices = cos_price_heston(S, v, tau, r_i, kappa_i, theta_i, sv_i, rho_i, K=K, N=N_cos)
         ivols = _bs_implied_vol_vec(prices, S, K, tau, r_i)
         
         # Check for excessive NaNs (> 10% bad is suspicious)
